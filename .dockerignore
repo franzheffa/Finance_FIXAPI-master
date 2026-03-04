@@ -1,0 +1,7 @@
+.git
+.vercel
+bin
+obj
+node_modules
+package.json
+vercel.json

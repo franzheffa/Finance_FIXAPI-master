@@ -1,6 +1,4 @@
 {
   "version": 2,
-  "name": "finance-fixapi-master",
-  "buildCommand": "mkdir -p output && echo 'MVP Placeholder' > output/index.html",
-  "outputDirectory": "output"
+  "framework": "nextjs"
 }
