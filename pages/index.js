@@ -1,78 +1,105 @@
-import React, { useState, useEffect } from 'react';
-import { Smartphone, Shield, Zap, ArrowUpRight, Mic, Camera, Search, LayoutGrid } from 'lucide-react';
+import React, { useState } from 'react';
+import { Smartphone, Shield, Zap, ArrowUpRight, Mic, Camera, Search, LayoutGrid, CreditCard, DollarSign } from 'lucide-react';
 
-export default function MobileAIDashboard() {
+export default function EliteDashboard() {
   const gold = "#D4AF37";
-  const [usdAmount] = useState(150.00); // Exemple
-  const rate = 600; // Taux Hiflux dynamique
+  const [usdAmount] = useState(2540.50);
+  const rate = 600; 
   const fcfaAmount = usdAmount * rate;
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif' }}>
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'system-ui, sans-serif', color: '#000' }}>
       
-      {/* AI Navigation Bar - Multimodal Gemini */}
-      <nav style={{ padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F8F8F8' }}>
-        <LayoutGrid size={24} color="#000" />
-        <div style={{ fontWeight: '900', letterSpacing: '2px' }}>BUTTERTECH</div>
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <Camera size={24} color={gold} />
-          <Mic size={24} color={gold} />
+      {/* Top Bar - Gemini Multimodal Active */}
+      <nav style={{ padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #F2F2F2' }}>
+        <LayoutGrid size={24} />
+        <div style={{ fontWeight: '900', letterSpacing: '3px', fontSize: '18px' }}>BUTTERTECH</div>
+        <div style={{ display: 'flex', gap: '20px' }}>
+          <Camera size={24} color={gold} style={{ cursor: 'pointer' }} onClick={() => alert('Gemini OCR: Scan de facture activé')} />
+          <Mic size={24} color={gold} style={{ cursor: 'pointer' }} onClick={() => alert('Gemini Voice: Écoute en cours...')} />
         </div>
       </nav>
 
       <main style={{ flex: 1, padding: '20px' }}>
-        {/* Main Wallet Card - The "Gold" Standard */}
-        <div style={{ 
-          background: '#000', 
-          borderRadius: '28px', 
-          padding: '35px 25px', 
-          color: '#FFF', 
-          marginBottom: '30px', 
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <p style={{ color: gold, fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '10px' }}>Global Balance</p>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
-            <h2 style={{ fontSize: '38px', margin: 0 }}>${usdAmount.toLocaleString()}</h2>
-            <span style={{ color: gold, fontSize: '18px', fontWeight: '300' }}>/ {fcfaAmount.toLocaleString()} FCFA</span>
+        {/* Card Master - White/Black/Gold */}
+        <div style={{ background: '#000', borderRadius: '30px', padding: '35px 25px', color: '#FFF', marginBottom: '30px', boxShadow: '0 15px 35px rgba(0,0,0,0.2)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <p style={{ color: gold, fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>DISPONIBLE</p>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                <h2 style={{ fontSize: '32px', margin: 0 }}>${usdAmount.toLocaleString()}</h2>
+                <span style={{ color: gold, fontSize: '16px', fontWeight: '300' }}>/ {fcfaAmount.toLocaleString()} FCFA</span>
+              </div>
+            </div>
+            <Shield size={28} color={gold} />
           </div>
-          <div style={{ marginTop: '25px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '8px', height: '8px', background: '#4ade80', borderRadius: '50%' }}></div>
-            <span style={{ fontSize: '12px', color: '#888' }}>Gemini Multimodal AI Secured</span>
+          <div style={{ marginTop: '25px', padding: '10px 15px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', fontSize: '12px', color: '#AAA', border: '1px solid rgba(212,175,55,0.3)' }}>
+            Hiflux Engine: <span style={{ color: gold }}>1 USD = 600 FCFA</span>
           </div>
         </div>
 
-        {/* AI Prompt Input (Central Feature for Mobile AI First) */}
-        <div style={{ marginBottom: '30px', position: 'relative' }}>
+        {/* AI Orchestrator Input */}
+        <div style={{ marginBottom: '35px', position: 'relative' }}>
           <input 
             type="text" 
-            placeholder="Dis à l'IA : Envoie 50$ à Jean en Mobile Money..."
-            style={{ width: '100%', padding: '18px 50px 18px 20px', borderRadius: '15px', border: '1px solid #EEE', backgroundColor: '#FAFAFA', fontSize: '14px' }}
+            placeholder="Action AI (ex: Scanner cette facture...)"
+            style={{ width: '100%', padding: '20px 20px', borderRadius: '20px', border: '1px solid #EEE', backgroundColor: '#FAFAFA', fontSize: '15px', outline: 'none' }}
           />
-          <Search size={20} color={gold} style={{ position: 'absolute', right: '15px', top: '18px' }} />
+          <Zap size={20} color={gold} style={{ position: 'absolute', right: '20px', top: '20px' }} />
         </div>
 
-        {/* Action Grid */}
+        {/* Payment Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-          <button style={{ padding: '20px', background: '#FFF', border: '1px solid #EEE', borderRadius: '20px', textAlign: 'left' }}>
-            <Zap size={24} color={gold} style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>Stripe</div>
-            <div style={{ fontSize: '11px', color: '#999' }}>Apple Pay & Cards</div>
+          {/* Section Occident */}
+          <button style={btnStyle}>
+            <CreditCard size={22} color={gold} />
+            <div style={btnTextContainer}>
+              <span style={btnTitle}>Stripe & Apple Pay</span>
+              <span style={btnSub}>Cartes de crédit</span>
+            </div>
           </button>
-          <button style={{ padding: '20px', background: '#FFF', border: '1px solid #EEE', borderRadius: '20px', textAlign: 'left' }}>
-            <Smartphone size={24} color={gold} style={{ marginBottom: '10px' }} />
-            <div style={{ fontWeight: 'bold', fontSize: '14px' }}>MoMo</div>
-            <div style={{ fontSize: '11px', color: '#999' }}>Africa Payout</div>
+
+          <button style={btnStyle}>
+            <DollarSign size={22} color={gold} />
+            <div style={btnTextContainer}>
+              <span style={btnTitle}>PayPal & Interac</span>
+              <span style={btnSub}>Canada & Int.</span>
+            </div>
+          </button>
+
+          {/* Section Afrique - Marques Historiques */}
+          <button style={{ ...btnStyle, gridColumn: 'span 2', background: '#000', color: '#FFF' }}>
+            <Smartphone size={24} color={gold} />
+            <div style={btnTextContainer}>
+              <span style={{ ...btnTitle, color: gold }}>MOBILE MONEY</span>
+              <span style={{ color: '#888', fontSize: '11px' }}>MTN • Orange • M-Pesa • Camtel</span>
+            </div>
+            <ArrowUpRight size={20} color={gold} style={{ marginLeft: 'auto' }} />
           </button>
         </div>
       </main>
 
-      {/* Footer System Nav */}
-      <footer style={{ padding: '20px', display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #F8F8F8' }}>
-        <Shield size={24} color="#000" />
-        <div style={{ width: '50px', height: '5px', background: '#EEE', borderRadius: '10px' }}></div>
-        <div style={{ fontSize: '12px', fontWeight: 'bold', color: gold }}>HIFLUX v1.0</div>
+      {/* Nav System */}
+      <footer style={{ padding: '20px 40px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #F2F2F2' }}>
+        <LayoutGrid size={24} color={gold} />
+        <div style={{ height: '4px', width: '60px', background: '#EEE', borderRadius: '10px', alignSelf: 'center' }}></div>
+        <Search size={24} color="#CCC" />
       </footer>
     </div>
   );
 }
+
+const btnStyle = { 
+  display: 'flex', 
+  flexDirection: 'column', 
+  gap: '12px', 
+  padding: '20px', 
+  background: '#FFF', 
+  border: '1px solid #EEE', 
+  borderRadius: '24px', 
+  textAlign: 'left',
+  cursor: 'pointer'
+};
+const btnTextContainer = { display: 'flex', flexDirection: 'column' };
+const btnTitle = { fontWeight: '700', fontSize: '14px' };
+const btnSub = { fontSize: '11px', color: '#999' };
