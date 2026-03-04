@@ -1,69 +1,73 @@
-import React from 'react';
-import { ShieldCheck, Coins, CreditCard, Landmark, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Smartphone, Globe, Shield, Zap, ArrowUpRight } from 'lucide-react';
 
-export default function GoldDashboard() {
+export default function MobileFirstDashboard() {
   const gold = "#D4AF37";
-  
+  const [loading, setLoading] = useState(false);
+
+  const handlePayment = async (type) => {
+    setLoading(true);
+    // Logique d'appel API vers Stripe ou Mobile Money
+    setTimeout(() => setLoading(false), 2000);
+  };
+
   return (
-    <div style={{ backgroundColor: '#FFFFFF', color: '#000000', minHeight: '100vh', fontFamily: "'Georgia', serif" }}>
-      {/* Barre de Navigation Supérieure */}
-      <nav style={{ borderBottom: "2px solid #F2F2F2", padding: "20px 50px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ fontSize: "24px", fontWeight: "900", letterSpacing: "1px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <ShieldCheck size={28} color={gold} /> BUTTERTECH <span style={{ color: gold }}>FINANCE</span>
-        </h1>
-        <div style={{ fontSize: "14px", fontWeight: "600", color: gold, border: "1px solid " + gold, padding: "5px 15px" }}>
-          SOUVEREIGN ORCHESTRATOR
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'sans-serif' }}>
+      {/* Header Statut AI */}
+      <header style={{ padding: '20px', borderBottom: '1px solid #F2F2F2', textAlign: 'center' }}>
+        <div style={{ fontSize: '12px', color: gold, fontWeight: 'bold', letterSpacing: '2px' }}>AI ORCHESTRATOR ACTIVE</div>
+        <h1 style={{ fontSize: '20px', margin: '5px 0', fontWeight: '900' }}>BUTTERTECH UI</h1>
+      </header>
+
+      {/* Main Wallet Card - Style Material Design */}
+      <main style={{ flex: 1, padding: '20px' }}>
+        <div style={{ background: '#000', borderRadius: '24px', padding: '30px', color: '#FFF', marginBottom: '30px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
+          <p style={{ color: gold, fontSize: '14px', marginBottom: '10px' }}>Digital Balance</p>
+          <h2 style={{ fontSize: '36px', margin: 0 }}>1,250.00 <span style={{ color: gold, fontSize: '18px' }}>Ui</span></h2>
+          <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+            <div style={{ background: 'rgba(212,175,55,0.2)', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', color: gold }}>Secure FIX 4.4 Bridge</div>
+          </div>
         </div>
-      </nav>
 
-      {/* Hero Section */}
-      <main style={{ padding: "60px 50px" }}>
-        <section style={{ marginBottom: "60px" }}>
-          <h2 style={{ fontSize: "48px", marginBottom: "10px" }}>L'Intemporalité de la Valeur.</h2>
-          <p style={{ fontSize: "18px", color: "#666", maxWidth: "700px" }}>
-            Connectez vos flux financiers mondiaux via notre passerelle hybride. 
-            Digitalisation du travail et sécurisation des actifs numériques.
-          </p>
-        </section>
-
-        {/* Grille des Services */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px" }}>
+        {/* Quick Actions - Mobile First */}
+        <section>
+          <h3 style={{ fontSize: '14px', color: '#999', marginBottom: '15px', textTransform: 'uppercase' }}>Services Intemporels</h3>
           
-          {/* Mobile Money Afrique */}
-          <div style={{ padding: "30px", border: "1px solid #EAEAEA", backgroundColor: "#FAFAFA" }}>
-            <Coins size={32} color={gold} style={{ marginBottom: "20px" }} />
-            <h3 style={{ fontSize: "20px", marginBottom: "15px" }}>AFRIQUE GATEWAY</h3>
-            <p style={{ color: "#444", fontSize: "15px", lineHeight: "1.6" }}>Intégration Mobile Money (MTN, Orange, M-Pesa). Le futur de la monnaie numérique sur le continent.</p>
-            <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #EEE" }} />
-            <span style={{ fontWeight: "bold", fontSize: "12px", color: gold, display: "flex", alignItems: "center", gap: "5px" }}>
-              ACTIVER LE FLUX <ArrowRight size={14} />
-            </span>
-          </div>
+          {/* Apple Pay / Stripe */}
+          <button 
+            onClick={() => handlePayment('stripe')}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', background: '#FAFAFA', border: '1px solid #EEE', borderRadius: '16px', marginBottom: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <Zap color={gold} fill={gold} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: 'bold' }}>Stripe & Apple Pay</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>Europe, USA, Canada</div>
+              </div>
+            </div>
+            <ArrowUpRight size={18} color={gold} />
+          </button>
 
-          {/* Stripe / Interac */}
-          <div style={{ padding: "30px", border: "1px solid #EAEAEA", backgroundColor: "#FAFAFA" }}>
-            <CreditCard size={32} color={gold} style={{ marginBottom: "20px" }} />
-            <h3 style={{ fontSize: "20px", marginBottom: "15px" }}>STRIPE & APPLE PAY</h3>
-            <p style={{ color: "#444", fontSize: "15px", lineHeight: "1.6" }}>Interac, Apple Pay et Stripe Checkout. Une infrastructure robuste pour le travail intemporel.</p>
-            <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #EEE" }} />
-            <span style={{ fontWeight: "bold", fontSize: "12px", color: gold, display: "flex", alignItems: "center", gap: "5px" }}>
-              CONFIGURATION PRO <ArrowRight size={14} />
-            </span>
-          </div>
-
-          {/* FIX Engine Legacy */}
-          <div style={{ padding: "30px", border: "1px solid #000", backgroundColor: "#000", color: "#FFF" }}>
-            <Landmark size={32} color={gold} style={{ marginBottom: "20px" }} />
-            <h3 style={{ fontSize: "20px", marginBottom: "15px", color: gold }}>ENGINE FIX 4.4</h3>
-            <p style={{ color: "#AAA", fontSize: "15px", lineHeight: "1.6" }}>Votre moteur financier de 2016 est maintenant synchronisé avec le cloud moderne.</p>
-            <div style={{ marginTop: "20px", fontSize: "12px", color: gold }}>STATUS: SYNCHRONISÉ</div>
-          </div>
-
-        </div>
+          {/* Mobile Money */}
+          <button 
+            onClick={() => handlePayment('momo')}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px', background: '#FAFAFA', border: '1px solid #EEE', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <Smartphone color="#000" />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontWeight: 'bold' }}>Mobile Money Africa</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>MTN, Orange, M-Pesa</div>
+              </div>
+            </div>
+            <ArrowUpRight size={18} color={gold} />
+          </button>
+        </section>
       </main>
 
-      <footer style={{ position: "fixed", bottom: "0", width: "100%", padding: "20px 50px", fontSize: "12px", color: "#999", textAlign: "center", borderTop: "1px solid #F2F2F2" }}>
-        © 2026 BUTTERTECH INC. - L'EXCELLENCE DANS LA MONNAIE NUMÉRIQUE.
+      {/* Navigation Footer */}
+      <footer style={{ padding: '20px', borderTop: '1px solid #F2F2F2', display: 'flex', justifyContent: 'space-around', backgroundColor: '#FFF' }}>
+        <Shield color={gold} />
+        <Globe color="#DDD" />
+        <div style={{ width: '24px', height: '24px', background: '#000', borderRadius: '50%' }}></div>
       </footer>
     </div>
   );
