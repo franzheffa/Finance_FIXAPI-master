@@ -24,6 +24,14 @@ MOBILE_MONEY_API_KEY=replace_me
 ORANGE_MONEY_API_BASE_URL=https://api.orange-money.example
 ORANGE_MONEY_CLIENT_ID=replace_me
 ORANGE_MONEY_CLIENT_SECRET=replace_me
+MTN_MOMO_API_BASE_URL=https://sandbox.momodeveloper.mtn.com
+MTN_MOMO_API_USER_ID=replace_me
+MTN_MOMO_API_KEY=replace_me
+MTN_MOMO_TARGET_ENVIRONMENT=sandbox
+MTN_MOMO_PROVIDER_CALLBACK_HOST=example.com
+MTN_MOMO_PROVISIONING_SUBSCRIPTION_KEY=replace_me
+MTN_MOMO_COLLECTION_SUBSCRIPTION_KEY=replace_me
+MTN_MOMO_DISBURSEMENT_SUBSCRIPTION_KEY=replace_me
 INTERAC_API_BASE_URL=https://api.interac.example
 INTERAC_API_KEY=replace_me
 ORANGE_ORDERING_BASE_URL=https://api.orange.com/ordering/b2b/v3
@@ -70,8 +78,13 @@ vercel env add ORANGE_MONEY_CLIENT_SECRET production
 vercel env add ORANGE_MONEY_API_KEY production
 vercel env add ORANGE_MONEY_PAYOUT_PATH production
 vercel env add MTN_MOMO_API_BASE_URL production
+vercel env add MTN_MOMO_API_USER_ID production
 vercel env add MTN_MOMO_API_KEY production
-vercel env add MTN_MOMO_PAYOUT_PATH production
+vercel env add MTN_MOMO_TARGET_ENVIRONMENT production
+vercel env add MTN_MOMO_PROVIDER_CALLBACK_HOST production
+vercel env add MTN_MOMO_PROVISIONING_SUBSCRIPTION_KEY production
+vercel env add MTN_MOMO_COLLECTION_SUBSCRIPTION_KEY production
+vercel env add MTN_MOMO_DISBURSEMENT_SUBSCRIPTION_KEY production
 vercel env add MPESA_API_BASE_URL production
 vercel env add MPESA_API_KEY production
 vercel env add MPESA_PAYOUT_PATH production
@@ -283,4 +296,59 @@ curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Cont
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-preflight.json
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-token.json
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-poll.json
+```
+
+## 11) Intégration MTN MoMo Payment APIs
+
+Endpoint backend intégré:
+
+- `POST /api/mtn-momo`
+
+Actions supportées:
+
+- `preflight`
+- `createApiUser`
+- `createApiKey`
+- `token`
+- `requestToPay`
+- `requestToPayStatus`
+- `transfer`
+- `transferStatus`
+- `balance`
+- `accountHolderActive`
+
+Commandes `cat` prêtes:
+
+```bash
+cat > /tmp/mtn-preflight.json <<'EOF'
+{"action":"preflight"}
+EOF
+
+cat > /tmp/mtn-request-to-pay.json <<'EOF'
+{
+  "action":"requestToPay",
+  "msisdn":"237690000000",
+  "amount":"1000",
+  "currency":"XAF",
+  "externalId":"COL-001",
+  "payerMessage":"Paiement client",
+  "payeeNote":"Collecte MTN"
+}
+EOF
+
+cat > /tmp/mtn-transfer.json <<'EOF'
+{
+  "action":"transfer",
+  "msisdn":"237690000000",
+  "amount":"1000",
+  "currency":"XAF",
+  "externalId":"DISB-001",
+  "payerMessage":"Paiement fournisseur",
+  "payeeNote":"Disbursement MTN"
+}
+EOF
+
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/mtn-momo" -H "Content-Type: application/json" --data-binary @/tmp/mtn-preflight.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/mtn-momo" -H "Content-Type: application/json" --data-binary @/tmp/mtn-request-to-pay.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/mtn-momo" -H "Content-Type: application/json" --data-binary @/tmp/mtn-transfer.json
 ```
