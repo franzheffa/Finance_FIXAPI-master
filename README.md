@@ -32,11 +32,18 @@ ORANGE_OIDC_TOKEN_URL=https://api.orange.com/oauth/v3/token
 ORANGE_OIDC_AUTHORIZE_URL=https://api.orange.com/oauth/v3/authorize
 ORANGE_OIDC_REDIRECT_URI=https://smith-heffa-paygate.vercel.app/api/oidc/callback
 ORANGE_OIDC_SCOPE=openid dpv:FraudPreventionAndDetection number-verification:verify
+ORANGE_OIDC_CIBA_AUTHORIZE_URL=https://api.orange.com/oauth/v3/bc-authorize
+ORANGE_OIDC_CIBA_AUTH_METHOD=basic
+ORANGE_OIDC_CIBA_SCOPE=openid dpv:FraudPreventionAndDetection sim-swap:check
 ORANGE_ORDERING_SCOPE=b2b:ordering
 ORANGE_ACCEPT_LANGUAGE=fr
 ORANGE_CLIENT_ID=replace_me
 ORANGE_CLIENT_SECRET=replace_me
 ORANGE_API_KEY=replace_me
+ORANGE_CLIENT_PRIVATE_KEY_PEM="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+ORANGE_CLIENT_KEY_ID=replace_me
+ORANGE_CLIENT_ASSERTION_SUB=replace_me
+ORANGE_CLIENT_ASSERTION_AUD=https://api.orange.com/oauth/v3/token
 EOF
 ```
 
@@ -81,11 +88,18 @@ vercel env add ORANGE_OIDC_TOKEN_URL production
 vercel env add ORANGE_OIDC_AUTHORIZE_URL production
 vercel env add ORANGE_OIDC_REDIRECT_URI production
 vercel env add ORANGE_OIDC_SCOPE production
+vercel env add ORANGE_OIDC_CIBA_AUTHORIZE_URL production
+vercel env add ORANGE_OIDC_CIBA_AUTH_METHOD production
+vercel env add ORANGE_OIDC_CIBA_SCOPE production
 vercel env add ORANGE_ORDERING_SCOPE production
 vercel env add ORANGE_ACCEPT_LANGUAGE production
 vercel env add ORANGE_CLIENT_ID production
 vercel env add ORANGE_CLIENT_SECRET production
 vercel env add ORANGE_API_KEY production
+vercel env add ORANGE_CLIENT_PRIVATE_KEY_PEM production
+vercel env add ORANGE_CLIENT_KEY_ID production
+vercel env add ORANGE_CLIENT_ASSERTION_SUB production
+vercel env add ORANGE_CLIENT_ASSERTION_AUD production
 vercel --prod --yes
 ```
 
@@ -205,4 +219,55 @@ EOF
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/init" \
   -H "Content-Type: application/json" \
   --data-binary @/tmp/oidc-init.json
+```
+
+## 10) Flux OIDC CIBA Backend (Basic + JWT Assertion)
+
+Page de validation:
+
+- `GET /ciba-debug`
+
+Endpoint:
+
+- `POST /api/oidc/ciba`
+
+Actions:
+
+- `start` (retourne `auth_req_id`, `expires_in`, `interval`)
+- `token` (échange `auth_req_id` contre `access_token`)
+- `poll` (poll automatique jusqu’à token ou timeout)
+
+Test `cat` prêts:
+
+```bash
+cat > /tmp/ciba-start.json <<'EOF'
+{
+  "action": "start",
+  "authMethod": "basic",
+  "login_hint": "tel:+237690000000",
+  "scope": "openid dpv:FraudPreventionAndDetection sim-swap:check"
+}
+EOF
+
+cat > /tmp/ciba-token.json <<'EOF'
+{
+  "action": "token",
+  "authMethod": "basic",
+  "auth_req_id": "REPLACE_AUTH_REQ_ID"
+}
+EOF
+
+cat > /tmp/ciba-poll.json <<'EOF'
+{
+  "action": "poll",
+  "authMethod": "basic",
+  "auth_req_id": "REPLACE_AUTH_REQ_ID",
+  "maxAttempts": 6,
+  "intervalSec": 2
+}
+EOF
+
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-start.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-token.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-poll.json
 ```
