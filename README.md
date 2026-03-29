@@ -26,6 +26,13 @@ ORANGE_MONEY_CLIENT_ID=replace_me
 ORANGE_MONEY_CLIENT_SECRET=replace_me
 INTERAC_API_BASE_URL=https://api.interac.example
 INTERAC_API_KEY=replace_me
+ORANGE_ORDERING_BASE_URL=https://api.orange.com/ordering/b2b/v3
+ORANGE_OAUTH_TOKEN_URL=https://api.orange.com/oauth/v3/token
+ORANGE_ORDERING_SCOPE=b2b:ordering
+ORANGE_ACCEPT_LANGUAGE=fr
+ORANGE_CLIENT_ID=replace_me
+ORANGE_CLIENT_SECRET=replace_me
+ORANGE_API_KEY=replace_me
 EOF
 ```
 
@@ -72,3 +79,32 @@ Le code actuel expose des flux de simulation pour plusieurs rails. Pour envoyer 
 5. Exécuter des tests de bout en bout en environnement sandbox avant production.
 
 Sans ces credentials et contrats opérateurs, l'application reste une simulation UX/API pour les rails non Stripe.
+
+## 7) Endpoint intégré: Orange Ordering v3.1
+
+Route serverless ajoutée: `POST /api/orange-ordering`
+
+Actions supportées dans le body JSON:
+
+- `status`
+- `version`
+- `me`
+- `listRequests` (avec `query`)
+- `getRequest` (avec `id`)
+- `createRequest` (avec `payload`)
+- `listCatalogItems` (avec `query`)
+- `getCatalogItem` (avec `id`)
+
+Exemple `cat` prêt à tester:
+
+```bash
+cat > /tmp/orange-ordering-status.json <<'EOF'
+{
+  "action": "status"
+}
+EOF
+
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/orange-ordering" \
+  -H "Content-Type: application/json" \
+  --data-binary @/tmp/orange-ordering-status.json
+```
