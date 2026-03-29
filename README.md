@@ -238,6 +238,7 @@ Actions:
 - `start` (retourne `auth_req_id`, `expires_in`, `interval`)
 - `token` (échange `auth_req_id` contre `access_token`)
 - `poll` (poll automatique jusqu’à token ou timeout)
+- `preflight` (diagnostic de config: vars manquantes + endpoints candidats)
 
 Test `cat` prêts:
 
@@ -248,6 +249,13 @@ cat > /tmp/ciba-start.json <<'EOF'
   "authMethod": "basic",
   "login_hint": "tel:+237690000000",
   "scope": "openid dpv:FraudPreventionAndDetection sim-swap:check"
+}
+EOF
+
+cat > /tmp/ciba-preflight.json <<'EOF'
+{
+  "action": "preflight",
+  "authMethod": "basic"
 }
 EOF
 
@@ -272,6 +280,7 @@ cat > /tmp/ciba-poll.json <<'EOF'
 EOF
 
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-start.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-preflight.json
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-token.json
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/oidc/ciba" -H "Content-Type: application/json" --data-binary @/tmp/ciba-poll.json
 ```

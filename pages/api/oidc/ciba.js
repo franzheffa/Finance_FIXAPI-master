@@ -40,6 +40,23 @@ function tokenCandidates(extra = []) {
   ]);
 }
 
+function preflight(authMethod) {
+  const method = authMethod || 'basic';
+  const required = method === 'jwt_assertion'
+    ? ['ORANGE_CLIENT_ID', 'ORANGE_CLIENT_PRIVATE_KEY_PEM']
+    : ['ORANGE_CLIENT_ID', 'ORANGE_CLIENT_SECRET'];
+
+  const missing = required.filter((k) => !process.env[k]);
+  return {
+    auth_method: method,
+    required_env: required,
+    missing_env: missing,
+    ciba_authorize_candidates: authorizeCandidates(),
+    ciba_token_candidates: tokenCandidates(),
+    ready: missing.length === 0
+  };
+}
+
 function normalizePem(value) {
   return String(value || '').replace(/\\n/g, '\n').trim();
 }
@@ -183,6 +200,10 @@ export default async function handler(req, res) {
       return res.status(result.status).json({ ...result.data, ciba_endpoint: result.endpoint, auth_method: authMethod });
     }
 
+    if (action === 'preflight') {
+      return res.status(200).json(preflight(authMethod));
+    }
+
     if (action === 'token') {
       const authReqId = String(req.body?.auth_req_id || req.body?.authReqId || '').trim();
       const preferredTokenUrl = String(req.body?.token_url || req.body?.tokenUrl || '').trim();
@@ -229,10 +250,13 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(400).json({ error: 'Unsupported action', allowed: ['start', 'token', 'poll'] });
+    return res.status(400).json({ error: 'Unsupported action', allowed: ['start', 'token', 'poll', 'preflight'] });
   } catch (error) {
+    const hint = preflight(authMethod);
     return res.status(500).json({
       error: 'OIDC CIBA flow failed',
+      missing_env: hint.missing_env,
+      ciba_authorize_candidates: hint.ciba_authorize_candidates,
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
