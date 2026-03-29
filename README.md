@@ -55,6 +55,20 @@ vercel env add MOBILE_MONEY_API_KEY production
 vercel env add ORANGE_MONEY_API_BASE_URL production
 vercel env add ORANGE_MONEY_CLIENT_ID production
 vercel env add ORANGE_MONEY_CLIENT_SECRET production
+vercel env add ORANGE_MONEY_API_KEY production
+vercel env add ORANGE_MONEY_PAYOUT_PATH production
+vercel env add MTN_MOMO_API_BASE_URL production
+vercel env add MTN_MOMO_API_KEY production
+vercel env add MTN_MOMO_PAYOUT_PATH production
+vercel env add MPESA_API_BASE_URL production
+vercel env add MPESA_API_KEY production
+vercel env add MPESA_PAYOUT_PATH production
+vercel env add SWIFT_API_BASE_URL production
+vercel env add SWIFT_API_KEY production
+vercel env add SWIFT_PAYOUT_PATH production
+vercel env add SEPA_API_BASE_URL production
+vercel env add SEPA_API_KEY production
+vercel env add SEPA_PAYOUT_PATH production
 vercel env add INTERAC_API_BASE_URL production
 vercel env add INTERAC_API_KEY production
 vercel --prod --yes
@@ -107,4 +121,48 @@ EOF
 curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/orange-ordering" \
   -H "Content-Type: application/json" \
   --data-binary @/tmp/orange-ordering-status.json
+```
+
+## 8) Endpoints intégrés: Stripe, Apple Pay, MTN, M-PESA, SWIFT, SEPA
+
+Routes serverless ajoutées:
+
+- `POST /api/stripe-payment-intent`
+- `POST /api/applepay-intent`
+- `POST /api/mobile-money-payout`
+- `POST /api/bank-transfer-payout`
+
+Exemples `cat` prêts:
+
+```bash
+cat > /tmp/stripe-intent.json <<'EOF'
+{"amount":5000,"currency":"usd","reference":"ORDER-001"}
+EOF
+
+cat > /tmp/applepay-intent.json <<'EOF'
+{"amount":2500,"currency":"cad","reference":"APPLE-001"}
+EOF
+
+cat > /tmp/mtn-payout.json <<'EOF'
+{"provider":"mtn","amount":1000,"currency":"XAF","phone":"+237690000000","country":"CM","reference":"MTN-001","dryRun":true}
+EOF
+
+cat > /tmp/mpesa-payout.json <<'EOF'
+{"provider":"mpesa","amount":1500,"currency":"KES","phone":"+254700000000","country":"KE","reference":"MPESA-001","dryRun":true}
+EOF
+
+cat > /tmp/swift-payout.json <<'EOF'
+{"rail":"swift","amount":2500,"currency":"USD","beneficiaryName":"Franz Heffa","accountNumber":"123456789","bic":"CITIUS33XXX","reference":"SWIFT-001","dryRun":true}
+EOF
+
+cat > /tmp/sepa-payout.json <<'EOF'
+{"rail":"sepa","amount":1200,"currency":"EUR","beneficiaryName":"Franz Heffa","iban":"FR7630006000011234567890189","reference":"SEPA-001","dryRun":true}
+EOF
+
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/stripe-payment-intent" -H "Content-Type: application/json" --data-binary @/tmp/stripe-intent.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/applepay-intent" -H "Content-Type: application/json" --data-binary @/tmp/applepay-intent.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/mobile-money-payout" -H "Content-Type: application/json" --data-binary @/tmp/mtn-payout.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/mobile-money-payout" -H "Content-Type: application/json" --data-binary @/tmp/mpesa-payout.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/bank-transfer-payout" -H "Content-Type: application/json" --data-binary @/tmp/swift-payout.json
+curl -sS -X POST "https://smith-heffa-paygate.vercel.app/api/bank-transfer-payout" -H "Content-Type: application/json" --data-binary @/tmp/sepa-payout.json
 ```
