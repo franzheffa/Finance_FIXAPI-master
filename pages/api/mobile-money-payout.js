@@ -143,6 +143,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  const action = String(req.body?.action || '').toLowerCase();
   const provider = String(req.body?.provider || '').toLowerCase();
   const amount = Number(req.body?.amount);
   const currency = String(req.body?.currency || 'XAF').toUpperCase();
@@ -155,6 +156,16 @@ export default async function handler(req, res) {
   const cfg = providerConfig(provider);
   if (!cfg) {
     return res.status(400).json({ error: 'Unsupported provider', allowed: ['mtn', 'mpesa', 'orange'] });
+  }
+
+  if (action === 'preflight') {
+    const missing = missingVars(cfg.required);
+    return res.status(200).json({
+      provider: cfg.name,
+      ready: missing.length === 0,
+      missing,
+      endpoint: `${cfg.baseUrl || ''}${cfg.path || ''}`
+    });
   }
 
   if (!Number.isFinite(amount) || amount <= 0) {
@@ -226,6 +237,8 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({
       error: 'Mobile Money payout failed',
+      provider: cfg?.name,
+      hint: 'Check provider base URL, payout path, API key, and network reachability.',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
