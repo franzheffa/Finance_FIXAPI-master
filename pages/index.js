@@ -75,6 +75,19 @@ const RECENT_TXS = [
   { icon: 'ArrowLeftRight', label: 'Interac e-Transfer',  sub: 'CAD - Buttertech',        val: '-CA$ 200.00' },
 ];
 export default function EliteDashboard() {
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(null);
+  const [authMode, setAuthMode] = useState('login');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authName, setAuthName] = useState('');
+  const [authOtp, setAuthOtp] = useState('');
+  const [authNeed2fa, setAuthNeed2fa] = useState(false);
+  const [authBusy, setAuthBusy] = useState(false);
+  const [authMsg, setAuthMsg] = useState('');
+  const [authTwoFaSecret, setAuthTwoFaSecret] = useState('');
+  const [authTwoFaUri, setAuthTwoFaUri] = useState('');
+  const [authSetupOtp, setAuthSetupOtp] = useState('');
   const [fixStatus, setFixStatus]   = useState('DISCONNECTED');
   const [fixLog, setFixLog]         = useState([]);
   const [isScanning, setIsScanning] = useState(false);
@@ -159,6 +172,100 @@ export default function EliteDashboard() {
     };
     pullPlatformStatus();
   }, []);
+  useEffect(() => {
+    let mounted = true;
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (!mounted) return;
+        if (res.ok && data?.user) {
+          setAuthUser(data.user);
+          setAuthMsg('');
+        }
+      } catch (e) {}
+      if (mounted) setAuthLoading(false);
+    };
+    checkAuth();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  const submitAuth = async () => {
+    if (authBusy) return;
+    setAuthBusy(true);
+    setAuthMsg('');
+    try {
+      const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const payload =
+        authMode === 'register'
+          ? { email: authEmail, password: authPassword, name: authName }
+          : { email: authEmail, password: authPassword, otp: authNeed2fa ? authOtp : undefined };
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data?.require2fa) {
+          setAuthNeed2fa(true);
+          setAuthMsg('2FA requis: entre ton code 6 chiffres');
+          setAuthBusy(false);
+          return;
+        }
+        throw new Error(data?.error || 'Authentification échouée');
+      }
+      setAuthUser(data.user);
+      setAuthNeed2fa(false);
+      setAuthOtp('');
+      setAuthMsg(authMode === 'register' ? 'Compte créé et connecté.' : 'Connexion réussie.');
+    } catch (e) {
+      setAuthMsg(e?.message || 'Erreur authentification');
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+  const logoutAuth = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    setAuthUser(null);
+    setAuthNeed2fa(false);
+    setAuthTwoFaSecret('');
+    setAuthTwoFaUri('');
+    setAuthSetupOtp('');
+    setAuthMsg('Déconnecté.');
+  };
+  const setup2FA = async () => {
+    try {
+      const res = await fetch('/api/auth/2fa/setup', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || '2FA setup failed');
+      setAuthTwoFaSecret(data.secret || '');
+      setAuthTwoFaUri(data.otpauthUrl || '');
+      setAuthMsg('2FA initialisé. Confirme avec un code OTP.');
+    } catch (e) {
+      setAuthMsg(e?.message || 'Erreur setup 2FA');
+    }
+  };
+  const enable2FA = async () => {
+    try {
+      const res = await fetch('/api/auth/2fa/enable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ otp: authSetupOtp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || '2FA enable failed');
+      setAuthMsg('2FA activé avec succès.');
+      setAuthSetupOtp('');
+      setAuthTwoFaSecret('');
+      setAuthTwoFaUri('');
+    } catch (e) {
+      setAuthMsg(e?.message || 'Erreur activation 2FA');
+    }
+  };
   const rMomo    = () => { setMomoStep(0);    setMomoOp(null);    setMomoDial('');    setMomoPhone('');   setMomoAmount('');  setMomoPin('');  setMomoRef(''); };
   const rSwift   = () => { setSwiftStep(0);   setSwiftBank(null); setSwiftIBAN('');   setSwiftBenef('');  setSwiftAmount(''); setSwiftRef(''); };
   const rSepa    = () => { setSepaStep(0);    setSepaCtry(null);  setSepaIBAN('');    setSepaBenef('');   setSepaAmount(''); setSepaMotif(''); setSepaRef(''); };
@@ -217,6 +324,27 @@ export default function EliteDashboard() {
   const swiftEur  = swiftAmount  ? (parseFloat(swiftAmount) * 0.92).toFixed(2)      : '0.00';
   const sepaUsd   = sepaAmount   ? (parseFloat(sepaAmount) * 1.09).toFixed(2)       : '0.00';
   const interacUs = interacAmount? (parseFloat(interacAmount) * 0.74).toFixed(2)    : '0.00';
+  if (authLoading) {
+    return React.createElement('div', { style: { minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#fff', color: '#000', fontWeight: 900, letterSpacing: '1px' } }, 'BUTTERTECH · CHARGEMENT');
+  }
+  if (!authUser) {
+    return React.createElement(AuthGate, {
+      mode: authMode,
+      setMode: setAuthMode,
+      email: authEmail,
+      setEmail: setAuthEmail,
+      password: authPassword,
+      setPassword: setAuthPassword,
+      name: authName,
+      setName: setAuthName,
+      otp: authOtp,
+      setOtp: setAuthOtp,
+      need2fa: authNeed2fa,
+      busy: authBusy,
+      message: authMsg,
+      onSubmit: submitAuth
+    });
+  }
   return (
     React.createElement('div', { style: { backgroundColor:'#FFFFFF', minHeight:'100vh', color:'#000', fontFamily:'-apple-system,BlinkMacSystemFont,sans-serif', overflowX:'hidden' } },
       React.createElement('div', { onClick: connectFix, style: { background: fixStatus==='FIX 4.4 ACTIVE'?'#00C853':gold, color:'#000', padding:'10px', textAlign:'center', fontSize:'11px', fontWeight:'900', cursor:'pointer', letterSpacing:'2px' } },
@@ -232,11 +360,24 @@ export default function EliteDashboard() {
           React.createElement('div', { style: { fontSize:'7px', color:gold, fontWeight:'800', letterSpacing:'1px' } }, 'NVIDIA INCEPTION PARTNER')
         ),
         React.createElement('div', { style: { display:'flex', gap:'18px' } },
+          React.createElement(Icons.ShieldCheck, { size:24, color:'#000', onClick:setup2FA, style:{ cursor:'pointer' } }),
           React.createElement(Icons.Camera, { size:24, color:isScanning?gold:'#000', onClick:toggleCamera, style:{ cursor:'pointer' } }),
-          React.createElement(Icons.Mic,    { size:24, color:isListening?'#EF4444':'#000', onClick:toggleVoice, style:{ cursor:'pointer' } })
+          React.createElement(Icons.Mic,    { size:24, color:isListening?'#EF4444':'#000', onClick:toggleVoice, style:{ cursor:'pointer' } }),
+          React.createElement(Icons.LogOut, { size:24, color:'#000', onClick:logoutAuth, style:{ cursor:'pointer' } })
         )
       ),
       React.createElement('main', { style: { padding:'20px 25px' } },
+        React.createElement('div', { style: { background:'#F8F8F8', border:'1px solid #EEE', borderRadius:'16px', padding:'12px 14px', marginBottom:'12px' } },
+          React.createElement('div', { style: { fontSize:'10px', color:'#999', fontWeight:'800', letterSpacing:'1.5px', marginBottom:'5px' } }, 'IDENTITE / SECURITE'),
+          React.createElement('div', { style: { fontSize:'12px', fontWeight:'800', color:'#000' } }, authUser.email || 'Session active'),
+          authMsg && React.createElement('div', { style: { fontSize:'11px', color:'#777', marginTop:'6px' } }, authMsg),
+          authTwoFaSecret && React.createElement('div', { style: { marginTop:'8px', padding:'10px', background:'#000', color:gold, borderRadius:'12px', fontSize:'11px', fontWeight:'800', wordBreak:'break-all' } }, 'SECRET 2FA: ' + authTwoFaSecret),
+          authTwoFaUri && React.createElement('div', { style: { marginTop:'6px', fontSize:'10px', color:'#666', wordBreak:'break-all' } }, authTwoFaUri),
+          authTwoFaSecret && React.createElement('div', { style: { display:'flex', gap:'8px', marginTop:'8px' } },
+            React.createElement('input', { value:authSetupOtp, onChange:e=>setAuthSetupOtp(e.target.value.replace(/\D/g,'').slice(0,6)), placeholder:'Code OTP 2FA', style:{ flex:1, padding:'10px 12px', border:'1px solid #DDD', borderRadius:'10px', fontWeight:'700', outline:'none' } }),
+            React.createElement('button', { onClick:enable2FA, style:{ padding:'10px 12px', background:'#000', color:gold, border:'none', borderRadius:'10px', fontWeight:'900', cursor:'pointer' } }, 'ACTIVER')
+          )
+        ),
         React.createElement('div', { style: { background:'#000', borderRadius:'28px', padding:'35px 28px', color:'#FFF', marginBottom:'20px', border:'1.5px solid ' + gold } },
           React.createElement('p', { style: { color:gold, fontSize:'9px', fontWeight:'800', letterSpacing:'2px', marginBottom:8 } }, 'GLOBAL ASSET VALUE'),
           React.createElement('h2', { style: { fontSize:'40px', margin:'0 0 6px', fontWeight:'900' } }, '$2,540.50'),
@@ -439,6 +580,26 @@ function StatusChip({label,value}) {
     React.createElement('div', { style: { display:'flex', alignItems:'center', gap:'6px' } },
       React.createElement('span', { style: { width:'7px', height:'7px', borderRadius:'50%', background:dot, display:'inline-block', flexShrink:0 } }),
       React.createElement('span', { style: { color:txt, fontSize:'10px', fontWeight:'800', lineHeight:1.2, letterSpacing:'0.4px' } }, value.replace(/_/g, ' ').toUpperCase())
+    )
+  );
+}
+function AuthGate({ mode, setMode, email, setEmail, password, setPassword, name, setName, otp, setOtp, need2fa, busy, message, onSubmit }) {
+  const g = '#D4AF37';
+  return React.createElement('div', { style: { minHeight:'100vh', background:'#fff', color:'#000', display:'grid', placeItems:'center', padding:'20px' } },
+    React.createElement('div', { style: { width:'100%', maxWidth:'520px', background:'#fff', border:'1.5px solid #EAEAEA', borderRadius:'24px', overflow:'hidden' } },
+      React.createElement('div', { style: { background:'#000', color:g, padding:'16px 20px', fontWeight:'900', letterSpacing:'2px', fontSize:'12px', textAlign:'center' } }, 'BUTTERTECH · VIIZE ACCESS'),
+      React.createElement('div', { style: { padding:'20px' } },
+        React.createElement('div', { style: { display:'flex', gap:'8px', marginBottom:'12px' } },
+          React.createElement('button', { onClick:()=>setMode('login'), style:{ flex:1, padding:'10px', borderRadius:'12px', border:'1px solid '+(mode==='login'?g:'#EEE'), background:mode==='login'?'#000':'#F8F8F8', color:mode==='login'?g:'#000', fontWeight:'900', cursor:'pointer' } }, 'LOGIN'),
+          React.createElement('button', { onClick:()=>setMode('register'), style:{ flex:1, padding:'10px', borderRadius:'12px', border:'1px solid '+(mode==='register'?g:'#EEE'), background:mode==='register'?'#000':'#F8F8F8', color:mode==='register'?g:'#000', fontWeight:'900', cursor:'pointer' } }, 'REGISTER')
+        ),
+        mode === 'register' && React.createElement('input', { value:name, onChange:e=>setName(e.target.value), placeholder:'Nom complet', style:{ width:'100%', boxSizing:'border-box', padding:'12px 14px', border:'1px solid #E5E5E5', borderRadius:'12px', marginBottom:'8px', fontWeight:'700', outline:'none' } }),
+        React.createElement('input', { value:email, onChange:e=>setEmail(e.target.value), placeholder:'Email', type:'email', style:{ width:'100%', boxSizing:'border-box', padding:'12px 14px', border:'1px solid #E5E5E5', borderRadius:'12px', marginBottom:'8px', fontWeight:'700', outline:'none' } }),
+        React.createElement('input', { value:password, onChange:e=>setPassword(e.target.value), placeholder:'Password', type:'password', style:{ width:'100%', boxSizing:'border-box', padding:'12px 14px', border:'1px solid #E5E5E5', borderRadius:'12px', marginBottom:'8px', fontWeight:'700', outline:'none' } }),
+        need2fa && React.createElement('input', { value:otp, onChange:e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,6)), placeholder:'Code 2FA (6 chiffres)', style:{ width:'100%', boxSizing:'border-box', padding:'12px 14px', border:'1px solid '+g, borderRadius:'12px', marginBottom:'8px', fontWeight:'800', outline:'none', letterSpacing:'2px' } }),
+        message && React.createElement('div', { style: { fontSize:'11px', color:'#666', marginBottom:'10px' } }, message),
+        React.createElement('button', { onClick:onSubmit, disabled:busy, style:{ width:'100%', padding:'13px 14px', border:'none', borderRadius:'12px', background:'#000', color:g, fontWeight:'900', letterSpacing:'1px', cursor:busy?'not-allowed':'pointer' } }, busy ? 'TRAITEMENT...' : (mode === 'register' ? 'CREER LE COMPTE' : 'SE CONNECTER'))
+      )
     )
   );
 }
