@@ -3,8 +3,18 @@ const TOKEN_SAFETY_WINDOW_SECONDS = 30;
 let cachedToken = null;
 let cachedTokenExpiryMs = 0;
 
+function envValue(name, fallback = '') {
+  return String(process.env[name] ?? fallback).trim();
+}
+
+function looksLikePlaceholder(value) {
+  const v = String(value || '').trim().toLowerCase();
+  if (!v) return true;
+  return v.includes('replace_me') || v.includes('example') || v === 'changeme' || v === 'dummy';
+}
+
 function getRequiredEnv(name) {
-  const value = process.env[name];
+  const value = envValue(name);
   if (!value) {
     throw new Error(`Missing environment variable: ${name}`);
   }
@@ -17,10 +27,10 @@ async function getAccessToken() {
     return cachedToken;
   }
 
-  const tokenUrl = process.env.ORANGE_OAUTH_TOKEN_URL || 'https://api.orange.com/oauth/v3/token';
+  const tokenUrl = envValue('ORANGE_OAUTH_TOKEN_URL', 'https://api.orange.com/oauth/v3/token');
   const clientId = getRequiredEnv('ORANGE_CLIENT_ID');
   const clientSecret = getRequiredEnv('ORANGE_CLIENT_SECRET');
-  const scope = process.env.ORANGE_ORDERING_SCOPE || 'b2b:ordering';
+  const scope = envValue('ORANGE_ORDERING_SCOPE', 'b2b:ordering');
 
   const body = new URLSearchParams({
     grant_type: 'client_credentials',
@@ -54,9 +64,9 @@ async function getAccessToken() {
 
 async function callOrangeOrdering(path, { method = 'GET', query, body } = {}) {
   const token = await getAccessToken();
-  const baseUrl = process.env.ORANGE_ORDERING_BASE_URL || 'https://api.orange.com/ordering/b2b/v3';
+  const baseUrl = envValue('ORANGE_ORDERING_BASE_URL', 'https://api.orange.com/ordering/b2b/v3');
   const apiKey = getRequiredEnv('ORANGE_API_KEY');
-  const language = process.env.ORANGE_ACCEPT_LANGUAGE || 'fr';
+  const language = envValue('ORANGE_ACCEPT_LANGUAGE', 'fr');
 
   const url = new URL(`${baseUrl}${path}`);
   if (query && typeof query === 'object') {
@@ -106,6 +116,29 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (action === 'preflight') {
+      const required = ['ORANGE_CLIENT_ID', 'ORANGE_CLIENT_SECRET', 'ORANGE_API_KEY'];
+      const missing = required.filter((k) => !envValue(k));
+      const tokenUrl = envValue('ORANGE_OAUTH_TOKEN_URL', 'https://api.orange.com/oauth/v3/token');
+      const baseUrl = envValue('ORANGE_ORDERING_BASE_URL', 'https://api.orange.com/ordering/b2b/v3');
+      const warnings = [];
+      if (looksLikePlaceholder(baseUrl)) warnings.push('ORANGE_ORDERING_BASE_URL looks like placeholder');
+      if (looksLikePlaceholder(tokenUrl)) warnings.push('ORANGE_OAUTH_TOKEN_URL looks like placeholder');
+      if (looksLikePlaceholder(envValue('ORANGE_CLIENT_ID'))) warnings.push('ORANGE_CLIENT_ID looks like placeholder');
+      if (looksLikePlaceholder(envValue('ORANGE_CLIENT_SECRET'))) warnings.push('ORANGE_CLIENT_SECRET looks like placeholder');
+      if (looksLikePlaceholder(envValue('ORANGE_API_KEY'))) warnings.push('ORANGE_API_KEY looks like placeholder');
+      return res.status(200).json({
+        provider: 'ORANGE_ORDERING',
+        ready: missing.length === 0 && warnings.length === 0,
+        missing,
+        warnings,
+        endpoints: {
+          oauthToken: tokenUrl,
+          orderingBase: baseUrl
+        }
+      });
+    }
+
     let result;
 
     switch (action) {
@@ -164,6 +197,7 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({
       error: 'Orange ordering proxy failed',
+      message: error?.message || undefined,
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
