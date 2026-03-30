@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import * as Icons from 'lucide-react';
 const gold = "#D4AF37";
 const MOMO_OPERATORS = [
@@ -82,6 +82,7 @@ export default function EliteDashboard() {
   const videoRef = useRef(null);
   const [showPayModal, setShowPayModal] = useState(null);
   const [payProc, setPayProc] = useState(null);
+  const [platformStatus, setPlatformStatus] = useState(null);
   const [momoStep, setMomoStep]     = useState(0);
   const [momoOp, setMomoOp]         = useState(null);
   const [momoDial, setMomoDial]     = useState('');
@@ -147,6 +148,17 @@ export default function EliteDashboard() {
     r.onresult = (e) => addLog('Commande: ' + e.results[0][0].transcript);
     r.start();
   };
+  useEffect(() => {
+    let mounted = true;
+    const pullPlatformStatus = async () => {
+      try {
+        const res = await fetch('/api/platform-status');
+        const data = await res.json();
+        if (mounted && res.ok) setPlatformStatus(data);
+      } catch (e) {}
+    };
+    pullPlatformStatus();
+  }, []);
   const rMomo    = () => { setMomoStep(0);    setMomoOp(null);    setMomoDial('');    setMomoPhone('');   setMomoAmount('');  setMomoPin('');  setMomoRef(''); };
   const rSwift   = () => { setSwiftStep(0);   setSwiftBank(null); setSwiftIBAN('');   setSwiftBenef('');  setSwiftAmount(''); setSwiftRef(''); };
   const rSepa    = () => { setSepaStep(0);    setSepaCtry(null);  setSepaIBAN('');    setSepaBenef('');   setSepaAmount(''); setSepaMotif(''); setSepaRef(''); };
@@ -241,6 +253,10 @@ export default function EliteDashboard() {
         React.createElement('div', { style: { marginBottom:'12px' } },
           React.createElement(PBtn, { icon:React.createElement(Icons.Apple,{size:20,color:gold}), label:'APPLE PAY', onClick:()=>setShowPayModal('APPLE PAY'), row:true })
         ),
+        React.createElement(SecLabel, { label:'ORCHESTRATION PLATFORM' }),
+        platformStatus
+          ? React.createElement(StatusPanel, { data: platformStatus })
+          : React.createElement('div', { style: { background:'#F8F8F8', border:'1px solid #EEE', borderRadius:'16px', padding:'14px', marginBottom:'14px', fontSize:'12px', color:'#999', fontWeight:'700' } }, 'Chargement status engine...'),
         React.createElement(SecLabel, { label:'VIREMENTS BANCAIRES' }),
         React.createElement(BigBtn, { icon:React.createElement(Icons.Landmark,{size:22,color:'#000'}),         bg:gold,      title:'SWIFT / WIRE TRANSFER',    sub:'International USD EUR GBP CAD', onClick:()=>{ rSwift();   setSwiftStep(1); } }),
         React.createElement(BigBtn, { icon:React.createElement(Icons.Globe2,{size:22,color:'#FFF'}),           bg:'#003087', title:'SEPA / VIREMENT EUROPEEN', sub:'Zone Euro Instant J+1 IBAN',    onClick:()=>{ rSepa();    setSepaStep(1); } }),
@@ -392,6 +408,40 @@ function PinPad({pin,onP,label}){ const g="#D4AF37"; return React.createElement(
 function Recap({rows}){ return React.createElement('div',{style:{background:'#F8F8F8',borderRadius:'20px',padding:'20px',marginBottom:'20px'}},rows.map((r,i)=>React.createElement('div',{key:i,style:{display:'flex',justifyContent:'space-between',padding:'9px 0',borderBottom:i<rows.length-1?'1px solid #ECECEC':'none'}},React.createElement('span',{style:{fontSize:'11px',color:'#999',fontWeight:'600'}},r.l),React.createElement('span',{style:{fontSize:'12px',fontWeight:'800',maxWidth:'60%',textAlign:'right',wordBreak:'break-all'}},r.v)))); }
 function Succ({ref_,amount,label,onClose,simMode}){ const g="#D4AF37"; return React.createElement('div',{style:{textAlign:'center',paddingTop:'10px'}},simMode&&React.createElement(SimBadge, null),React.createElement('div',{style:{width:80,height:80,background:'#000',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px'}},React.createElement(Icons.CheckCircle,{size:40,color:g})),React.createElement('h3',{style:{fontSize:'20px',fontWeight:'900',marginBottom:'8px'}},'TRANSACTION CONFIRMEE'),React.createElement('p',{style:{fontSize:'12px',color:'#999',marginBottom:'20px'}},'Execute via protocole FIX 4.4 NVIDIA Inception Security.'),React.createElement('div',{style:{background:'#F8F8F8',borderRadius:'16px',padding:'16px',marginBottom:'16px'}},React.createElement('p',{style:{fontSize:'10px',color:'#999',marginBottom:'4px',letterSpacing:'1px'}},'REFERENCE'),React.createElement('p',{style:{fontSize:'15px',fontWeight:'900',color:g,letterSpacing:'2px'}},ref_)),React.createElement('div',{style:{background:'#000',borderRadius:'16px',padding:'16px',marginBottom:'20px',display:'flex',justifyContent:'space-between'}},React.createElement('div',{style:{textAlign:'left'}},React.createElement('p',{style:{fontSize:'10px',color:'#888',marginBottom:'4px'}},'MONTANT'),React.createElement('p',{style:{fontSize:'18px',fontWeight:'900',color:g}},amount)),React.createElement('div',{style:{textAlign:'right'}},React.createElement('p',{style:{fontSize:'10px',color:'#888',marginBottom:'4px'}},'CANAL'),React.createElement('p',{style:{fontSize:'11px',fontWeight:'800',color:'#FFF'}},label))),React.createElement(ActBtn,{label:'FERMER',onClick:onClose})); }
 function SimBadge(){ const g="#D4AF37"; return React.createElement('div',{style:{display:'inline-flex',alignItems:'center',gap:'8px',background:'#000',color:g,border:'1px solid '+g,borderRadius:'999px',padding:'6px 12px',fontSize:'10px',fontWeight:'900',letterSpacing:'1px',marginBottom:'14px'}},React.createElement(Icons.FlaskConical,{size:12,color:g}),'MODE SIMULATION'); }
+function StatusPanel({data}) {
+  return React.createElement('div', { style: { background:'#000', border:'1.5px solid #D4AF37', borderRadius:'18px', padding:'14px', marginBottom:'14px' } },
+    React.createElement('div', { style: { display:'flex', alignItems:'center', justifyContent:'space-between', gap:'10px', marginBottom:'10px' } },
+      React.createElement('div', { style: { color:'#FFF', fontSize:'12px', fontWeight:'900', letterSpacing:'1px' } }, data.system || 'Platform'),
+      React.createElement('div', { style: { color:'#D4AF37', fontSize:'10px', fontWeight:'900', letterSpacing:'1px' } }, (data.mode || '').toUpperCase())
+    ),
+    React.createElement(StatusGroup, { title:'MODULES', map:data.modules || {} }),
+    React.createElement(StatusGroup, { title:'RAILS', map:data.rails || {} }),
+    React.createElement(StatusGroup, { title:'SECURITY', map:data.security || {} })
+  );
+}
+function StatusGroup({title,map}) {
+  const keys = Object.keys(map || {});
+  return React.createElement('div', { style: { marginBottom:'8px' } },
+    React.createElement('div', { style: { color:'#8E8E8E', fontSize:'9px', fontWeight:'800', letterSpacing:'1.6px', margin:'8px 0 6px' } }, title),
+    React.createElement('div', { style: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'8px' } },
+      keys.map((k) => React.createElement(StatusChip, { key:k, label:k, value:String(map[k]) }))
+    )
+  );
+}
+function StatusChip({label,value}) {
+  const v = (value || '').toLowerCase();
+  const good = v.includes('active') || v.includes('enabled') || v.includes('ready');
+  const warn = v.includes('pending') || v.includes('planned') || v.includes('sandbox') || v.includes('fallback') || v.includes('requires');
+  const dot = good ? '#22C55E' : (warn ? '#D4AF37' : '#EF4444');
+  const txt = good ? '#E7FFE7' : (warn ? '#FFEFB8' : '#FFD5D5');
+  return React.createElement('div', { style: { background:'#101010', border:'1px solid #1F1F1F', borderRadius:'12px', padding:'8px 10px' } },
+    React.createElement('div', { style: { color:'#7F7F7F', fontSize:'9px', fontWeight:'800', letterSpacing:'1px', marginBottom:'3px' } }, label.replace(/_/g, ' ').toUpperCase()),
+    React.createElement('div', { style: { display:'flex', alignItems:'center', gap:'6px' } },
+      React.createElement('span', { style: { width:'7px', height:'7px', borderRadius:'50%', background:dot, display:'inline-block', flexShrink:0 } }),
+      React.createElement('span', { style: { color:txt, fontSize:'10px', fontWeight:'800', lineHeight:1.2, letterSpacing:'0.4px' } }, value.replace(/_/g, ' ').toUpperCase())
+    )
+  );
+}
 function PBar(){ const g="#D4AF37"; return React.createElement('div',{style:{marginTop:'14px'}},React.createElement('div',{style:{width:'100%',height:'3px',background:'#F0F0F0',borderRadius:'4px',overflow:'hidden'}},React.createElement('div',{style:{height:'100%',background:g,borderRadius:'4px',animation:'prog 2.4s linear forwards'}})),React.createElement('style',null,'@keyframes prog{from{width:0%}to{width:100%}}')); }
 function ActBtn({onClick,disabled,label}){ const g="#D4AF37"; return React.createElement('button',{onClick,disabled,style:{width:'100%',padding:'20px',background:disabled?'#F0F0F0':'#000',color:disabled?'#CCC':g,borderRadius:'20px',fontWeight:'900',border:'none',fontSize:'13px',letterSpacing:'2px',cursor:disabled?'not-allowed':'pointer',transition:'all 0.2s'}},label); }
 function BkBtn({onClick,label}){ return React.createElement('button',{onClick,style:{width:'100%',padding:'14px',background:'none',border:'none',color:'#999',fontSize:'13px',cursor:'pointer',marginTop:'10px'}},label||'Retour'); }
