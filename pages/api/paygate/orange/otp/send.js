@@ -49,6 +49,7 @@ export default async function handler(req, res) {
       delivery,
     });
   } catch (error) {
+    console.error("Orange OTP send error:", error);
     return res.status(500).json({
       ok: false,
       error: error instanceof Error ? error.message : "Unknown error",
