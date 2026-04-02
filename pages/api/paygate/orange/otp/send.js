@@ -19,7 +19,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok: false, error: "Phone number is required" });
     }
 
-    ensureCountryAllowed(countryCode, orangeConfig);
+    if (!orangeConfig.simulation) {
+      ensureCountryAllowed(countryCode, orangeConfig);
+    }
 
     const to = normalizePhoneNumber(phoneNumber);
     const otp = generateOtp(6);
