@@ -1,11 +1,11 @@
-const { generateOtp } = require("../../../../../../lib/paygate/auth/generate-otp");
+const { generateOtp } = require("../../../../../lib/paygate/auth/generate-otp");
 const {
   normalizePhoneNumber,
   ensureCountryAllowed,
   ORANGE_COUNTRY_LABELS,
-} = require("../../../../../../lib/paygate/orange/countries");
-const { orangeConfig } = require("../../../../../../lib/paygate/orange/config");
-const { sendOrangeSms } = require("../../../../../../lib/paygate/orange/send-sms");
+} = require("../../../../../lib/paygate/orange/countries");
+const { orangeConfig } = require("../../../../../lib/paygate/orange/config");
+const { sendOrangeSms } = require("../../../../../lib/paygate/orange/send-sms");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -19,11 +19,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok: false, error: "Phone number is required" });
     }
 
-    if (!orangeConfig.simulation) {
-      console.log("ORANGE_SMS_CM_ENABLED env:", process.env.ORANGE_SMS_CM_ENABLED);
-      console.log("orangeConfig.countries.CM:", orangeConfig.countries.CM);
-      ensureCountryAllowed(countryCode, orangeConfig);
-    }
+    ensureCountryAllowed(countryCode, orangeConfig);
 
     const to = normalizePhoneNumber(phoneNumber);
     const otp = generateOtp(6);
