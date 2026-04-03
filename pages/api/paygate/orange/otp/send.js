@@ -1,11 +1,11 @@
-const { generateOtp } = require("../../../../../lib/paygate/auth/generate-otp");
+const { generateOtp } = require("../../../../../../lib/paygate/auth/generate-otp");
 const {
   normalizePhoneNumber,
   ensureCountryAllowed,
   ORANGE_COUNTRY_LABELS,
-} = require("../../../../../lib/paygate/orange/countries");
-const { orangeConfig } = require("../../../../../lib/paygate/orange/config");
-const { sendOrangeSms } = require("../../../../../lib/paygate/orange/send-sms");
+} = require("../../../../../../lib/paygate/orange/countries");
+const { orangeConfig } = require("../../../../../../lib/paygate/orange/config");
+const { sendOrangeSms } = require("../../../../../../lib/paygate/orange/send-sms");
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
