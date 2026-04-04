@@ -33,7 +33,7 @@ export default function LoginPage({
 
       {legacyEnabled && (
         <p>
-          <a href="/">Utiliser le login classique (beta)</a>
+          <a href="/login-classic">Utiliser le login classique (beta)</a>
         </p>
       )}
 
