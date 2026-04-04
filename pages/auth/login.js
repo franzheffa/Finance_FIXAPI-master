@@ -1,81 +1,100 @@
-import { signIn, getProviders } from "next-auth/react";
-import Link from "next/link";
+import { getProviders } from "next-auth/react";
 
-export default function LoginPage({ providers }) {
-  const googleProvider = providers?.google;
-  const appleProvider = providers?.apple;
-
-  const orangeEnabled = process.env.NEXT_PUBLIC_PAYGATE_AUTH_ORANGE_OTP_ENABLED === "true";
-  const legacyEnabled = process.env.NEXT_PUBLIC_PAYGATE_AUTH_LEGACY_ENABLED === "true";
+export default function LoginPage({
+  providers = {},
+  legacyEnabled = false,
+  orangeEnabled = false,
+}) {
+  const googleProvider = providers.google || null;
+  const appleProvider = providers.apple || null;
 
   return (
-    <main className="min-h-screen bg-[#f7f7f5] px-6 py-16 text-black">
-      <div className="mx-auto max-w-xl overflow-hidden rounded-[28px] border border-[#d9d2bf] bg-white shadow-[0_20px_80px_rgba(0,0,0,0.08)]">
-        <div className="bg-black px-8 py-6 text-center">
-          <div className="text-[12px] uppercase tracking-[0.35em] text-[#C6A85B]">
-            Buttertech · Smith-Heffa Paygate
-          </div>
-          <h1 className="mt-3 text-2xl font-semibold text-white">
-            Authentification unifiée
-          </h1>
-          <p className="mt-2 text-sm text-white/70">
-            Accès centralisé, enterprise grade.
-          </p>
-        </div>
+    <main style={{ padding: 24 }}>
+      <h1>Authentification unifiée</h1>
+      <p>Accès centralisé, enterprise grade.</p>
 
-        <div className="space-y-4 px-8 py-8">
-          {googleProvider && (
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/" })}
-              className="flex w-full items-center justify-center rounded-2xl border border-[#C6A85B] bg-black px-5 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-[#C6A85B] transition hover:opacity-95"
-            >
-              Continuer avec Google
-            </button>
-          )}
+      {googleProvider && (
+        <p>
+          <a href={googleProvider.signinUrl}>Continuer avec Google</a>
+        </p>
+      )}
 
-          {appleProvider && (
-            <button
-              onClick={() => signIn("apple", { callbackUrl: "/" })}
-              className="flex w-full items-center justify-center rounded-2xl border border-[#d9d2bf] bg-white px-5 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-[#faf8f2]"
-            >
-              Continuer avec Apple
-            </button>
-          )}
+      {appleProvider && (
+        <p>
+          <a href={appleProvider.signinUrl}>Continuer avec Apple</a>
+        </p>
+      )}
 
-          {orangeEnabled && (
-            <Link
-              href="/oidc-debug"
-              className="flex w-full items-center justify-center rounded-2xl border border-[#d9d2bf] bg-white px-5 py-4 text-sm font-semibold uppercase tracking-[0.18em] text-black transition hover:bg-[#faf8f2]"
-            >
-              Continuer avec téléphone / Orange OTP
-            </Link>
-          )}
+      {orangeEnabled && (
+        <p>
+          <a href="/oidc-debug">Continuer avec téléphone</a>
+        </p>
+      )}
 
-          {legacyEnabled && (
-            <Link
-              href="/"
-              className="block text-center text-xs uppercase tracking-[0.18em] text-black/55 underline-offset-4 hover:underline"
-            >
-              Utiliser le login classique (beta)
-            </Link>
-          )}
+      {legacyEnabled && (
+        <p>
+          <a href="/">Utiliser le login classique (beta)</a>
+        </p>
+      )}
 
-          {!googleProvider && !appleProvider && !orangeEnabled && !legacyEnabled && (
-            <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              Aucun provider d’authentification n’est activé.
-            </div>
-          )}
-        </div>
-      </div>
+      {!googleProvider && !appleProvider && !orangeEnabled && !legacyEnabled && (
+        <p>Aucun provider d’authentification n’est activé.</p>
+      )}
+
+      <p>Smith-Heffa Paygate</p>
+
+      <h2>Enterprise Payment Rail</h2>
+      <p>
+        Orchestration unifiée des paiements, OTP mobile trust layer, virements
+        bancaires et mobile money.
+      </p>
+
+      <p>Rails</p>
+      <ul>
+        <li>Stripe</li>
+        <li>PayPal</li>
+        <li>Apple Pay</li>
+        <li>Interac</li>
+        <li>SWIFT / SEPA</li>
+        <li>Orange Money / Mobile Money</li>
+      </ul>
+
+      <p>Sécurité</p>
+      <ul>
+        <li>Authentification</li>
+        <li>2FA / OTP</li>
+        <li>Session hardening</li>
+        <li>Audit trail</li>
+        <li>Enterprise access control</li>
+      </ul>
+
+      <p>Buttertech</p>
+      <ul>
+        <li>Viize Parking</li>
+        <li>Buttertech Academy</li>
+        <li>AI Multimodal Studio</li>
+        <li>Production-ready orchestration</li>
+      </ul>
+
+      <footer>© 2026 Smith-Heffa PaygateFond blanc • Noir • Or Louis XIV</footer>
     </main>
   );
 }
 
 export async function getServerSideProps() {
-  const providers = await getProviders();
+  const providers = (await getProviders()) || {};
+
+  const orangeEnabled =
+    process.env.NEXT_PUBLIC_PAYGATE_AUTH_ORANGE_OTP_ENABLED === "true";
+
+  const legacyEnabled =
+    process.env.NEXT_PUBLIC_PAYGATE_AUTH_LEGACY_ENABLED === "true";
+
   return {
     props: {
-      providers: providers ?? null,
+      providers,
+      orangeEnabled,
+      legacyEnabled,
     },
   };
 }
