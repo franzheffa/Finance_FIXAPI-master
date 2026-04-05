@@ -10,17 +10,17 @@ const ORANGE_COUNTRIES = [
   { code: "GN", name: "Guinée", dialCode: "+224", example: "+2246XXXXXXX" },
 ];
 
-const shell = {
+const styles = {
   page: {
     minHeight: "100vh",
     background: "#f6f3eb",
     color: "#111111",
     fontFamily:
       'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-    padding: "48px 16px",
+    padding: "40px 16px 56px",
   },
   wrap: {
-    maxWidth: 860,
+    maxWidth: 920,
     margin: "0 auto",
   },
   card: {
@@ -33,7 +33,7 @@ const shell = {
   hero: {
     background: "#0b0b0b",
     color: "#ffffff",
-    padding: "28px 28px 24px",
+    padding: "28px 30px 24px",
   },
   eyebrow: {
     fontSize: 12,
@@ -50,28 +50,28 @@ const shell = {
   },
   heroText: {
     margin: 0,
-    color: "rgba(255,255,255,0.72)",
+    color: "rgba(255,255,255,0.76)",
     fontSize: 15,
     lineHeight: 1.6,
   },
   body: {
-    padding: 28,
+    padding: 30,
     display: "grid",
-    gap: 20,
+    gap: 22,
   },
   section: {
     borderRadius: 22,
     border: "1px solid #eadfca",
     background: "#fcfaf5",
-    padding: 22,
+    padding: 24,
   },
-  h2: {
+  sectionTitle: {
     margin: "0 0 8px",
     fontSize: 22,
     lineHeight: 1.2,
     fontWeight: 800,
   },
-  p: {
+  sectionText: {
     margin: "0 0 18px",
     color: "#3d3322",
     fontSize: 15,
@@ -90,8 +90,8 @@ const shell = {
   },
   input: {
     width: "100%",
-    height: 52,
-    borderRadius: 16,
+    height: 54,
+    borderRadius: 18,
     border: "1px solid #d8c9aa",
     background: "#fffdf8",
     padding: "0 16px",
@@ -100,7 +100,7 @@ const shell = {
     outline: "none",
     boxSizing: "border-box",
   },
-  row: {
+  grid: {
     display: "grid",
     gap: 16,
     gridTemplateColumns: "1fr 1fr",
@@ -115,16 +115,15 @@ const shell = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 170,
-    height: 52,
-    borderRadius: 16,
+    minWidth: 180,
+    height: 54,
+    borderRadius: 18,
     border: "1px solid #0b0b0b",
     background: "#0b0b0b",
     color: "#d4b26a",
     fontWeight: 800,
-    letterSpacing: "0.08em",
+    letterSpacing: "0.05em",
     textTransform: "uppercase",
-    textDecoration: "none",
     cursor: "pointer",
     padding: "0 20px",
   },
@@ -132,10 +131,10 @@ const shell = {
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    minWidth: 120,
-    height: 52,
-    borderRadius: 16,
-    border: "1px solid #d8d8d8",
+    minWidth: 140,
+    height: 54,
+    borderRadius: 18,
+    border: "1px solid #d7d7d7",
     background: "#ffffff",
     color: "#111111",
     fontWeight: 700,
@@ -157,7 +156,7 @@ const shell = {
     color: "#6a5730",
     fontWeight: 600,
   },
-  footerNote: {
+  infoBox: {
     borderRadius: 16,
     background: "#faf7ef",
     border: "1px solid #eadfca",
@@ -185,13 +184,19 @@ export default function LoginClassicPage() {
 
   async function handleLoginSubmit(event) {
     event.preventDefault();
+
+    if (loginLoading) return;
+
     setLoginLoading(true);
     setLoginMessage("");
 
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         credentials: "include",
         body: JSON.stringify({ email, password }),
       });
@@ -205,7 +210,7 @@ export default function LoginClassicPage() {
       }
 
       setLoginMessage("Connexion réussie. Redirection...");
-      window.location.assign("/");
+      window.location.href = data?.redirectTo || "/";
     } catch (error) {
       setLoginMessage("Connexion impossible pour le moment.");
       setLoginLoading(false);
@@ -214,13 +219,19 @@ export default function LoginClassicPage() {
 
   async function handleOtpSubmit(event) {
     event.preventDefault();
+
+    if (otpLoading) return;
+
     setOtpLoading(true);
     setOtpMessage("");
 
     try {
       const response = await fetch("/api/paygate/orange/otp/send", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
         body: JSON.stringify({
           country,
           phoneNumber,
@@ -260,29 +271,33 @@ export default function LoginClassicPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main style={shell.page}>
-        <div style={shell.wrap}>
-          <div style={shell.card}>
-            <section style={shell.hero}>
-              <p style={shell.eyebrow}>Buttertech · Smith-Heffa Paygate</p>
-              <h1 style={shell.h1}>Login classique</h1>
-              <p style={shell.heroText}>
-                Accédez à votre espace en toute simplicité.
-              </p>
+      <main style={styles.page}>
+        <div style={styles.wrap}>
+          <div style={styles.card}>
+            <section style={styles.hero}>
+              <p style={styles.eyebrow}>Buttertech · Smith-Heffa Paygate</p>
+              <h1 style={styles.h1}>Login classique</h1>
+              <p style={styles.heroText}>Accédez à votre espace en toute simplicité.</p>
             </section>
 
-            <section style={shell.body}>
-              <section style={shell.section}>
-                <h2 style={shell.h2}>Connexion</h2>
-                <p style={shell.p}>
+            <section style={styles.body}>
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Connexion</h2>
+                <p style={styles.sectionText}>
                   Utilisez votre email et votre mot de passe pour continuer.
                 </p>
 
-                <form style={shell.form} onSubmit={handleLoginSubmit}>
-                  <label style={shell.label}>
+                <form
+                  style={styles.form}
+                  onSubmit={handleLoginSubmit}
+                  action="/login-classic"
+                  method="post"
+                  noValidate
+                >
+                  <label style={styles.label}>
                     Email
                     <input
-                      style={shell.input}
+                      style={styles.input}
                       type="email"
                       name="email"
                       autoComplete="email"
@@ -293,10 +308,10 @@ export default function LoginClassicPage() {
                     />
                   </label>
 
-                  <label style={shell.label}>
+                  <label style={styles.label}>
                     Mot de passe
                     <input
-                      style={shell.input}
+                      style={styles.input}
                       type="password"
                       name="password"
                       autoComplete="current-password"
@@ -307,32 +322,32 @@ export default function LoginClassicPage() {
                     />
                   </label>
 
-                  <div style={shell.actions}>
-                    <button type="submit" style={shell.primaryBtn} disabled={loginLoading}>
+                  <div style={styles.actions}>
+                    <button type="submit" style={styles.primaryBtn} disabled={loginLoading}>
                       {loginLoading ? "Connexion..." : "Se connecter"}
                     </button>
 
-                    <a href="/auth/login" style={shell.secondaryBtn}>
+                    <a href="/auth/login" style={styles.secondaryBtn}>
                       Retour
                     </a>
                   </div>
 
-                  <div style={shell.status}>{loginMessage}</div>
+                  <div style={styles.status}>{loginMessage}</div>
                 </form>
               </section>
 
-              <section style={shell.section}>
-                <h2 style={shell.h2}>Test rapide Orange</h2>
-                <p style={shell.p}>
+              <section style={styles.section}>
+                <h2 style={styles.sectionTitle}>Test rapide Orange</h2>
+                <p style={styles.sectionText}>
                   Vérifiez l’envoi d’un code sur les pays actifs avant le branchement final.
                 </p>
 
-                <form style={shell.form} onSubmit={handleOtpSubmit}>
-                  <div style={shell.row}>
-                    <label style={shell.label}>
+                <form style={styles.form} onSubmit={handleOtpSubmit}>
+                  <div style={styles.grid}>
+                    <label style={styles.label}>
                       Pays
                       <select
-                        style={shell.input}
+                        style={styles.input}
                         value={country}
                         onChange={handleCountryChange}
                       >
@@ -344,31 +359,35 @@ export default function LoginClassicPage() {
                       </select>
                     </label>
 
-                    <label style={shell.label}>
+                    <label style={styles.label}>
                       Numéro
                       <input
-                        style={shell.input}
+                        style={styles.input}
                         type="text"
                         placeholder={currentCountry.example}
                         required
                         value={phoneNumber}
                         onChange={(event) => setPhoneNumber(event.target.value)}
                       />
-                      <span style={shell.hint}>
+                      <span style={styles.hint}>
                         Indicatif {currentCountry.dialCode} · Exemple {currentCountry.example}
                       </span>
                     </label>
                   </div>
 
-                  <div style={shell.actions}>
-                    <button type="submit" style={shell.primaryBtn} disabled={otpLoading}>
+                  <div style={styles.actions}>
+                    <button type="submit" style={styles.primaryBtn} disabled={otpLoading}>
                       {otpLoading ? "Envoi..." : "Envoyer le code"}
                     </button>
                   </div>
 
-                  <div style={shell.status}>{otpMessage}</div>
+                  <div style={styles.status}>{otpMessage}</div>
                 </form>
               </section>
+
+              <div style={styles.infoBox}>
+                Pays disponibles : Cameroun, Sénégal, Côte d’Ivoire, RD Congo, Burkina Faso, Guinée.
+              </div>
             </section>
           </div>
         </div>

@@ -1,56 +1,87 @@
-import { prisma } from '../../../lib/prisma';
-import {
-  verifyPassword,
-  randomToken,
-  sessionExpiresAt,
-  setSessionCookie,
-  sha256,
-  getClientIp,
-  verifyTotp
-} from '../../../lib/auth';
+import { prisma } from "../../../lib/prisma";
 
-function sanitizeUser(user) {
-  return { id: user.id, email: user.email, name: user.name || null, createdAt: user.createdAt };
+function wantsJson(req) {
+  const accept = String(req.headers.accept || "");
+  const contentType = String(req.headers["content-type"] || "");
+  return accept.includes("application/json") || contentType.includes("application/json");
+}
+
+function redirectHtml(res, location) {
+  res.writeHead(303, { Location: location });
+  res.end();
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method === "GET") {
+    return redirectHtml(res, "/login-classic");
+  }
 
-  const email = String(req.body?.email || '').trim().toLowerCase();
-  const password = String(req.body?.password || '');
-  const otp = String(req.body?.otp || '');
-
-  if (!email || !password) return res.status(400).json({ error: 'Missing credentials' });
+  if (req.method !== "POST") {
+    if (wantsJson(req)) {
+      return res.status(405).json({ ok: false, error: "Méthode non autorisée." });
+    }
+    return redirectHtml(res, "/login-classic");
+  }
 
   try {
-    const account = await prisma.authAccount.findUnique({
-      where: { email },
-      include: { user: true }
-    });
-    if (!account) return res.status(401).json({ error: 'Invalid credentials' });
+    const { email, password } = req.body || {};
 
-    const ok = await verifyPassword(password, account.passwordHash);
-    if (!ok) return res.status(401).json({ error: 'Invalid credentials' });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedPassword = String(password || "");
 
-    if (account.twoFactorEnabled) {
-      if (!otp) return res.status(401).json({ error: '2FA required', require2fa: true });
-      if (!verifyTotp(otp, account.twoFactorSecret)) return res.status(401).json({ error: 'Invalid 2FA code', require2fa: true });
+    if (!normalizedEmail || !normalizedPassword) {
+      if (wantsJson(req)) {
+        return res.status(400).json({ ok: false, error: "Email et mot de passe requis." });
+      }
+      return redirectHtml(res, "/login-classic?error=missing_fields");
     }
 
-    const raw = randomToken(32);
-    await prisma.authSession.create({
-      data: {
-        accountId: account.id,
-        tokenHash: sha256(raw),
-        userAgent: String(req.headers['user-agent'] || '').slice(0, 500),
-        ipAddress: getClientIp(req),
-        expiresAt: sessionExpiresAt()
-      }
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        password: true,
+        createdAt: true,
+        security: {
+          select: {
+            twoFactorEnabled: true,
+          },
+        },
+      },
     });
-    setSessionCookie(res, raw);
 
-    return res.status(200).json({ ok: true, user: sanitizeUser(account.user), security: { twoFactorEnabled: account.twoFactorEnabled } });
+    if (!user || !user.password || user.password !== normalizedPassword) {
+      if (wantsJson(req)) {
+        return res.status(401).json({ ok: false, error: "Identifiants invalides." });
+      }
+      return redirectHtml(res, "/login-classic?error=invalid_credentials");
+    }
+
+    const payload = {
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      },
+      security: {
+        twoFactorEnabled: Boolean(user.security?.twoFactorEnabled),
+      },
+      redirectTo: "/",
+    };
+
+    if (wantsJson(req)) {
+      return res.status(200).json(payload);
+    }
+
+    return redirectHtml(res, "/");
   } catch (error) {
-    return res.status(500).json({ error: 'Login failed', message: error?.message || 'Unknown error' });
+    if (wantsJson(req)) {
+      return res.status(500).json({ ok: false, error: "Erreur interne." });
+    }
+    return redirectHtml(res, "/login-classic?error=server_error");
   }
 }
